@@ -4,8 +4,7 @@
   <img src="https://your-image-url.com/your-logo.png" alt="Logo" width="200">
 </div>
 
-![GitHub](https://img.shields.io/github/license/YourGitHubUsername/YourRepositoryName)
-![GitHub contributors](https://img.shields.io/github/contributors/YourGitHubUsername/YourRepositoryName)
+![GitHub]([https://img.shields.io/github/license/YourGitHubUsername/YourRepositoryName](https://github.com/akashpatil108/Machine-Learning-Algorithm-Playground.git))
 
 ## Table of Contents
 
