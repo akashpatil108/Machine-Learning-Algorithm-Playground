@@ -38,8 +38,7 @@ st.markdown(
     """
     <style>
     body {
-        font-size: 16px;
-        line-height: 36px;
+
         font-family: Arial, sans-serif;
         
     }
