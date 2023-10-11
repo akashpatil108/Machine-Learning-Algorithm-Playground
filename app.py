@@ -45,7 +45,7 @@ st.markdown(
     @media (max-width: 768px) {
         body {
             font-size: 14px;
-            line-height: 20px;
+            line-height: 30px;
         }
     }
      /* Define the animation */
@@ -78,7 +78,7 @@ st.markdown(
         }
     }
     .title {
-        font-size: 46px;
+        font-size: 40px;
         font-weight: bold;
         margin-bottom: 20px;
         text-align: center;
