@@ -33,19 +33,13 @@ st.set_page_config(
     page_icon="✅",
     layout="wide"
 )
-st.set_option('deprecation.showfileUploaderEncoding', False)
 
-# Link to external CSS file (style.css)
-st.markdown(
-    """
-    <link rel="stylesheet" href="style.css">
-    """,
-    unsafe_allow_html=True,
-)
 st.markdown(
     """
     <style>
     body {
+        font-size: 16px;
+        line-height: 36px;
         font-family: Arial, sans-serif;
         
     }
@@ -85,10 +79,6 @@ st.markdown(
         }
     }
     .title {
-        animation: typewriter 3s steps(60) 1s 1 normal both;
-        white-space: nowrap;
-        overflow: hidden;
-        border-right: 3px solid #007acc;
         font-size: 46px;
         font-weight: bold;
         margin-bottom: 20px;
@@ -160,6 +150,47 @@ st.markdown(
         padding: 8px;
         border-radius: 5px;
         background-color: #fff;
+    }
+    .styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #d2d6de;
+    }
+    .styled-table th, .styled-table td {
+        padding: 8px 12px;
+        text-align: center;
+    }
+    .styled-table th {
+        background-color: #007BFF;
+        color: white;
+    }
+    .styled-table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    } 
+    .mse {
+    color: #FF5733;
+    font-weight: bold;
+    }
+    
+    .r2 {
+        color: #03C03C;
+        font-weight: bold;
+    }
+    
+    .confusion-matrix {
+        border-collapse: collapse;
+        border: 1px solid #d2d6de;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .confusion-matrix th, .confusion-matrix td {
+        padding: 6px 8px;
+    }
+    
+    .accuracy {
+        color: #007BFF;
+        font-weight: bold;
     }
     </style>
     """,
@@ -311,7 +342,6 @@ if selected_dataset == "Upload your own dataset":
         # Display the dataset
         st.write("Uploaded dataset:")
         st.write(original_data )
-
         target_feature = st.selectbox("Select Target Feature", original_data .columns, key="target_feature")
 
         # Option to drop columns
@@ -965,6 +995,10 @@ else:
             st.write("Predicted Value:")
             st.write(manual_test_predictions)
 
+
+
+
+
 st.subheader("About this Project")
 # Add the project purpose
 st.markdown("Project Purpose:\n"
@@ -972,31 +1006,33 @@ st.markdown("Project Purpose:\n"
 
 # Add common questions and answers
 st.markdown("Q1) What is this project all about?\n"
-            "A1) This project is like a friendly tutor for people who are curious about data science and machine learning. It helps you learn without needing to write complex code. You can use it on your computer or even on your phone.")
+            " This project is like a friendly tutor for people who are curious about data science and machine learning. It helps you learn without needing to write complex code. You can use it on your computer or even on your phone.")
 
 st.markdown("Q2) How can this project help me?\n"
-            "A2) This project is super useful if you're just starting to explore data science and machine learning. It makes it easy to look at data, make it ready for analysis (like removing stuff you don't need), and try out machine learning—no coding skills required.")
+            " This project is super useful if you're just starting to explore data science and machine learning. It makes it easy to look at data, make it ready for analysis (like removing stuff you don't need), and try out machine learning—no coding skills required.")
 
 st.markdown("Q3) What can I do with this project?\n"
-            "A3) With this project, you can:\n"
+            " With this project, you can:\n"
             "- Look at Data: You can easily see what data looks like.\n"
-            "- Clean Data: You can get rid of data you don't want.\n"
             "- Try Machine Learning: You can see how machines can make predictions.")
 
 st.markdown("Q4) Who is this project designed for?\n"
-            "A4) This project is for:\n"
+            " This project is for:\n"
             "- New Learners: If you're new to data and coding, it's perfect for you.\n"
             "- Easy Access: You can use it on your computer or your phone.\n"
-            "- No Coding Needed: You don't need to be a coding expert.\n"
-            "- Learn at Your Pace: You can learn on your own schedule, no rush.")
+            "- No Coding Needed: You don't need to be a coding expert.\n")
 
 st.markdown("Q5) What are the limitations of this project?\n"
-            "A5) While this project is super helpful for new learners and those who want to explore data science easily, it has some limitations:\n"
+            " While this project is super helpful for new learners and those who want to explore data science easily, it has some limitations:\n"
             "- Simplicity: It simplifies complex data science tasks, which is great for beginners. However, it may not cover all advanced topics.\n"
-            "- Dependency on Pre-built Models: It relies on pre-built machine learning models, limiting customization.\n"
             "- Data Size: Handling very large datasets can be slow and might not work well on mobile devices.\n"
+            "- "
             "- Not for Experts: If you're already an experienced data scientist, you might find it too basic for your needs.\n"
             "Remember, it's a fantastic starting point, but you might need to explore more advanced tools as you become more experienced in data science.")
 
+
+st.markdown('''[LinkedIn](https://www.linkedin.com/in/akash-patil-985a7a179/)
+[GitHub](https://github.com/akashpatil108)
+''')
 # Add a footer
-st.markdown('<div class="footer">© 2023 Akash Patil</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">© 2023 Akash Patil </div> ', unsafe_allow_html=True)
