@@ -49,6 +49,12 @@ st.markdown(
         font-family: Arial, sans-serif;
         
     }
+    @media (max-width: 768px) {
+        body {
+            font-size: 14px;
+            line-height: 20px;
+        }
+    }
      /* Define the animation */
     @keyframes slide {
         from {
