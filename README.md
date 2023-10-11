@@ -1,8 +1,5 @@
 # Machine Learning Algorithm Playground
 
-<div align="center">
-  <img src="https://your-image-url.com/your-logo.png" alt="Logo" width="200">
-</div>
 
 ![GitHub]([https://img.shields.io/github/license/akashpatil108/Machine-Learning-Algorithm-Playground.git])
 
