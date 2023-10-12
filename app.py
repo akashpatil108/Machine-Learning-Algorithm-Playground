@@ -38,14 +38,13 @@ st.markdown(
     """
     <style>
     body {
-
         font-family: Arial, sans-serif;
         
     }
     @media (max-width: 768px) {
         body {
             font-size: 14px;
-            line-height: 30px;
+            line-height: 20px;
         }
     }
      /* Define the animation */
@@ -60,38 +59,39 @@ st.markdown(
            
     
     .welcome{
-    font-size: 25px;
-    font-family: 'Times New Roman', Times, serif;
-    font-style: italic;
-    text-align: unset;
-    animation: slide 1s alternate infinite;
+        font-size: 25px;
+        font-family: 'Times New Roman', Times, serif;
+        font-style: italic;
+        text-align: unset;
+        animation: slide 1s alternate infinite;
 
     }
 
-    /* Define the typewriter animation */
-    @keyframes typewriter {
-        from {
-            width: 0;
-        }
-        to {
-            width: 100%;
-        }
-    }
     .title {
-        font-size: 40px;
-        font-weight: bold;
-        margin-bottom: 20px;
         text-align: center;
-        touch-action: auto;
-        color: rgb(25, 10, 190);
-        border-color: #333;
-        font-style: normal;
-        border-radius: 2%;
-        border-style: groove;
-        background-color: #f59445;
-        box-shadow: #524e4e;
+        font-size: 34px; /* Adjust the font size as needed */
+        font-weight: bold;
+        text-transform: uppercase; /* Makes text uppercase */
+        text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.2); /* Adds a subtle 3D shadow effect */
+        padding: 5px;
+        display: inline-block;
+        transition: color 0.3s, transform 0.3s;
+        border: 1px solid #333;
+        border-radius: 4px;
         
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        -moz-box-align: center;
     }
+    .title:hover {
+        color: #ff5733; /* Change the text color on hover */
+        transform: scale(1.05); /* Scale up slightly on hover */
+        text-shadow: 2px 2px 4px rgba(0.2, 0.1, 0, 0);
+        box-shadow: 0px 4px 6px rgba(0.1, 0.2, 0, 0);
+    }
+
+
+    
     .subtitle {
         font-size: 24px;
         margin-bottom: 20px;
@@ -101,9 +101,10 @@ st.markdown(
         
     }
      .sub-header {
-        font-size: 24px;
-        font-weight: bold;
+        font-size: 20px;
+        font-weight: normal;
         margin-bottom: 10px;
+
     }
     .footer {
         font-size: 14px;
@@ -112,23 +113,57 @@ st.markdown(
     }
     .stSelectbox {
         padding: 8px;
-        border-radius: 2px;
-        background-color: #9c9595;
-        color: #dad3d3;
+        background: linear-gradient(to bottom, #00a1e4 0%, #0077cc 100%);
+        border: 1px solid #0077cc;
+        border-radius: 5px;
+        color:  #fff;
+        box-shadow: 0 5px 15px rgba(0, 119, 204, 0.4);
         
     }
+
+    .stSelectbox:hover {
+        background: linear-gradient(to bottom, #0077cc 0%, #00a1e4 100%);
+        box-shadow: 0 5px 15px rgba(0, 119, 204, 0.6);
+    }
+
+    .stSelectbox:focus {
+        outline: none;
+        background: linear-gradient(to bottom, #00a1e4 0%, #0077cc 100%);
+        box-shadow: 0 5px 15px rgba(0, 119, 204, 0.8);
+    }
     .stButton {
-        display: flexbox;
-        padding: 8px 16px;
-        border-radius: 5px;
-        color: #1b1717;
-        border: #333;
-        border-radius: 1%;
+        display: inline-block;
+        padding: 10px 20px;
+        color: #000000a8;
+        background-color: #ff5733;;
+        border: #000000;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        text-align: center;
+        cursor: pointer;
+        }
+    
+    .stButton::before {
+        content: '';
+        background: #ff2e00;;
+        border: 1px solid #d61d00;
+        border-radius: 4px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        transform: scale(0, 1);
+        transform-origin: 0% 50%;
+        transition: transform 0.3s ease;
     }
-    .stButton:hover {
-        color: #007ACC;
-        border-radius: 5%;
+    .stButton:hover::before {
+        transform: scale(1, 1);
+        transform-origin: 0% 50%;
     }
+  
     .stRadio {
         padding: 8px;
     }
@@ -150,47 +185,72 @@ st.markdown(
         border-radius: 5px;
         background-color: #fff;
     }
-    .styled-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #d2d6de;
-    }
-    .styled-table th, .styled-table td {
-        padding: 8px 12px;
-        text-align: center;
-    }
-    .styled-table th {
-        background-color: #007BFF;
-        color: white;
-    }
-    .styled-table tr:nth-child(even) {
-        background-color: #f2f2f2;
-    } 
-    .mse {
-    color: #FF5733;
-    font-weight: bold;
+    
+    /* Checkbox styles */
+    .stCheckbox label {
+        position: relative;
+        padding-left: 30px;
+        cursor: pointer;
+        user-select: none;
     }
     
-    .r2 {
-        color: #03C03C;
-        font-weight: bold;
+    .stCheckbox label::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s;
     }
     
-    .confusion-matrix {
-        border-collapse: collapse;
-        border: 1px solid #d2d6de;
-        width: 100%;
-        text-align: center;
+    .stCheckbox input[type="checkbox"] {
+        display: none;
     }
     
-    .confusion-matrix th, .confusion-matrix td {
-        padding: 6px 8px;
+    /* 3D effect when checked */
+    .stCheckbox input[type="checkbox"]:checked + label::before {
+        background-color: #0077cc; /* Change the background color when checked */
+        border: 1px solid #005599; /* Change the border color when checked */
     }
     
-    .accuracy {
-        color: #007BFF;
-        font-weight: bold;
+    /* 3D effect on hover */
+    .stCheckbox label:hover::before {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
+    .stNumberInput input[type="number"] {
+    padding: 10px;
+    border: 2px solid #0077cc;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stNumberInput input[type="number"]:hover {
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+    }
+    
+    .stNumberInput input[type="number"]:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
+    }
+    .stMultiSelect div[data-baseweb="select"] {
+    border: 2px solid #0077cc;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .stMultiSelect div[data-baseweb="select"]:hover {
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+    }
+
+    .stMultiSelect div[data-baseweb="select"]:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
+    }
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -272,6 +332,8 @@ st.markdown("3. Choose the machine learning algorithms you want to experiment wi
 st.markdown("4. Fine-tune hyperparameters and view cross-validation scores.")
 st.markdown("5. Test your models and see how they perform on new data.")
 st.markdown("6. Visualize the results and gain insights into your data.")
+st.info("Note: You can upload your own data in a CSV file by selecting 'Upload your own dataset'.")
+
 
 st.markdown("---")
 st.header("Step 1: Load Data")
@@ -280,6 +342,7 @@ st.markdown(
 )
 use_delimiter, use_encoding = st.columns(2)
 # Additional options for delimiter and encoding
+
 with use_delimiter:
     use_delimiter = st.checkbox("Specify Delimiter", key="use_delimiter")
 with use_encoding:
@@ -998,36 +1061,48 @@ else:
 
 
 
+import streamlit as st
+
+import streamlit as st
+
 st.subheader("About this Project")
-# Add the project purpose
-st.markdown("Project Purpose:\n"
-            "This project is like a friendly guide for beginners who want to learn how to use algorithms for data analysis. It helps them understand the step-by-step process of working with data without needing to write complex code. It's like having a virtual assistant that makes learning data science easy and accessible, even if you're using a mobile phone.")
 
-# Add common questions and answers
-st.markdown("Q1) What is this project all about?\n"
-            " This project is like a friendly tutor for people who are curious about data science and machine learning. It helps you learn without needing to write complex code. You can use it on your computer or even on your phone.")
+# Project Purpose
+st.markdown("Project Purpose:")
+st.markdown("This project is like a friendly guide for beginners who want to learn how to use algorithms for data analysis. It helps them understand the step-by-step process of working with data without needing to write complex code. It's like having a virtual assistant that makes learning data science easy and accessible, even if you're using a mobile phone.")
 
-st.markdown("Q2) How can this project help me?\n"
-            " This project is super useful if you're just starting to explore data science and machine learning. It makes it easy to look at data, make it ready for analysis (like removing stuff you don't need), and try out machine learning—no coding skills required.")
 
-st.markdown("Q3) What can I do with this project?\n"
-            " With this project, you can:\n"
-            "- Look at Data: You can easily see what data looks like.\n"
-            "- Try Machine Learning: You can see how machines can make predictions.")
 
-st.markdown("Q4) Who is this project designed for?\n"
-            " This project is for:\n"
-            "- New Learners: If you're new to data and coding, it's perfect for you.\n"
-            "- Easy Access: You can use it on your computer or your phone.\n"
-            "- No Coding Needed: You don't need to be a coding expert.\n")
+# Q1
+st.markdown("<h3> What is this project all about?</h3>", unsafe_allow_html=True)
+st.markdown("This project is like a friendly tutor for people who are curious about data science and machine learning. It helps you learn without needing to write complex code. You can use it on your computer or even on your phone.")
 
-st.markdown("Q5) What are the limitations of this project?\n"
-            " While this project is super helpful for new learners and those who want to explore data science easily, it has some limitations:\n"
-            "- Simplicity: It simplifies complex data science tasks, which is great for beginners. However, it may not cover all advanced topics.\n"
-            "- Data Size: Handling very large datasets can be slow and might not work well on mobile devices.\n"
-            "- "
-            "- Not for Experts: If you're already an experienced data scientist, you might find it too basic for your needs.\n"
-            "Remember, it's a fantastic starting point, but you might need to explore more advanced tools as you become more experienced in data science.")
+# Q2
+st.markdown("<h3>) How can this project help me?</h3>", unsafe_allow_html=True)
+st.markdown("This project is super useful if you're just starting to explore data science and machine learning. It makes it easy to look at data, make it ready for analysis (like removing stuff you don't need), and try out machine learning—no coding skills required.")
+
+# Q3
+st.markdown("<h3> What can I do with this project?</h3>", unsafe_allow_html=True)
+st.markdown("With this project, you can:")
+st.markdown("- Look at Data: You can easily see what data looks like.")
+st.markdown("- Preprocess Data: You can perform common data preprocessing tasks, such as dropping columns and label encoding.")
+st.markdown("- Try Machine Learning: You can see how machines can make predictions.")
+
+# Q4
+st.markdown("<h3>) Who is this project designed for?</h3>", unsafe_allow_html=True)
+st.markdown("This project is for:")
+st.markdown("- New Learners: If you're new to data and coding, it's perfect for you.")
+st.markdown("- Easy Access: You can use it on your computer or your phone.")
+st.markdown("- No Coding Needed: You don't need to be a coding expert.")
+
+# Q5
+st.markdown("<h3> What are the limitations of this project?</h3>", unsafe_allow_html=True)
+st.markdown("While this project is super helpful for new learners and those who want to explore data science easily, it has some limitations:")
+st.markdown("- Simplicity: It simplifies complex data science tasks, which is great for beginners. However, it may not cover all advanced topics.")
+st.markdown("- Data Size: Handling very large datasets can be slow and might not work well on mobile devices.")
+st.markdown("- Not for Experts: If you're already an experienced data scientist, you might find it too basic for your needs.")
+st.markdown("Remember, it's a fantastic starting point, but you might need to explore more advanced tools as you become more experienced in data science.")
+
 
 
 st.markdown('''[LinkedIn](https://www.linkedin.com/in/akash-patil-985a7a179/)
