@@ -27,6 +27,10 @@ from sklearn.preprocessing import LabelEncoder
 
 
 
+
+
+
+
 # Page title and sidebar navigation
 st.set_page_config(
     page_title="Machine Learning Algorithm Playground",
@@ -256,6 +260,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+
+
 if 'Report' not in st.session_state:
     st.session_state.Report = []
 
@@ -309,6 +316,9 @@ if "best_r2" not in st.session_state:
 
 if "best_classification_report" not in st.session_state:
     st.session_state.best_classification_report = {}
+if "modified_test_data" not in st.session_state:
+    st.session_state.modified_test_data = {}
+    
 
 st.markdown("<p class='welcome'>Welcome to the Machine Learning Algorithm Playground</p>",unsafe_allow_html=True)
 # Add the header with links to LinkedIn and GitHub
@@ -404,6 +414,11 @@ if selected_dataset == "Upload your own dataset":
         # Display the dataset
         st.write("Uploaded dataset:")
         st.write(original_data )
+        if original_data is not None:
+            st.subheader("Data Summary")
+            st.write("Null Value Check:")
+            st.write(original_data.isnull().sum())
+        
         target_feature = st.selectbox("Select Target Feature", original_data .columns, key="target_feature")
 
         # Option to drop columns
@@ -411,26 +426,33 @@ if selected_dataset == "Upload your own dataset":
             columns_to_drop = st.multiselect("Select Columns to Drop", original_data.columns)
             columns_dropped = True
         
-        # Option to apply label encoding
+       # Option to apply label encoding
         if st.checkbox("Apply Label Encoding"):
             columns_to_encode = st.multiselect("Select Columns for Label Encoding", original_data.columns)
             label_encoding_applied = True
-        
+
         if st.button("Confirm Changes"):
             # Create a copy of the original data for modifications
             modified_data = original_data.copy()
-            
+
             # Drop selected columns if the user applied the process
             if columns_dropped:
                 modified_data = modified_data.drop(columns=columns_to_drop)
-            
+
             # Apply label encoding to selected columns if the user applied the process
             if label_encoding_applied:
                 label_encoder = LabelEncoder()
+                label_mappings = {}  # Dictionary to store label mappings
+
                 for col in columns_to_encode:
                     modified_data[col] = label_encoder.fit_transform(modified_data[col])
-                    # Store modified_data in session state
+                    # Create a mapping dictionary for this column
+                    label_mappings[col] = {label: encoded_value for label, encoded_value in zip(original_data[col], modified_data[col])}
+
+            # Store modified_data and label_mappings in session state
             st.session_state.modified_data = modified_data
+            st.session_state.label_mappings = label_mappings
+
     
        # Splitting data into features (X) and labels (y)
         X = st.session_state.modified_data.drop(columns=[target_feature]) if st.session_state.modified_data is not None else original_data.drop(columns=[target_feature])
@@ -442,7 +464,7 @@ if selected_dataset == "Upload your own dataset":
         # Show the labeled features (X)
         st.write("Labeled Features (X):")
         st.write(X)
-        
+
 elif selected_dataset != "Select a Dataset":
     # Load the selected pre-loaded dataset
     selected_dataset_name = selected_dataset
@@ -452,35 +474,45 @@ elif selected_dataset != "Select a Dataset":
     st.write(f"Selected Pre-loaded Dataset: {selected_dataset_name}")
     st.write("Preview of the selected pre-loaded dataset:")
     st.write(original_data )
+    if original_data is not None:
+            st.subheader("Data Summary")
+            st.write("Null Value Check:")
+            st.write(original_data.isnull().sum())
 
     target_feature = st.selectbox("Select Target Feature", original_data.columns, key="target_feature")
 
-    # Option to drop columns
+        # Option to drop columns
     if st.checkbox("Drop Columns"):
-        columns_to_drop = st.multiselect("Select Columns to Drop", original_data.columns)
-        columns_dropped = True
-    
-    # Option to apply label encoding
+            columns_to_drop = st.multiselect("Select Columns to Drop", original_data.columns)
+            columns_dropped = True
+        
+       # Option to apply label encoding
     if st.checkbox("Apply Label Encoding"):
-        columns_to_encode = st.multiselect("Select Columns for Label Encoding", original_data.columns)
-        label_encoding_applied = True
-    
+            columns_to_encode = st.multiselect("Select Columns for Label Encoding", original_data.columns)
+            label_encoding_applied = True
+        
     if st.button("Confirm Changes"):
-        # Create a copy of the original data for modifications
-        modified_data = original_data.copy()
+            # Create a copy of the original data for modifications
+            modified_data = original_data.copy()
         
-        # Drop selected columns if the user applied the process
-        if columns_dropped:
-            modified_data = modified_data.drop(columns=columns_to_drop)
+            # Drop selected columns if the user applied the process
+            if columns_dropped:
+                modified_data = modified_data.drop(columns=columns_to_drop)
         
-        # Apply label encoding to selected columns if the user applied the process
-        if label_encoding_applied:
-            label_encoder = LabelEncoder()
-            for col in columns_to_encode:
-                modified_data[col] = label_encoder.fit_transform(modified_data[col])
-        # Store modified_data in session state
+            # Apply label encoding to selected columns if the user applied the process
+            if label_encoding_applied:
+                label_encoder = LabelEncoder()
+                label_mappings = {}  # Dictionary to store label mappings
+        
+                for col in columns_to_encode:
+                    modified_data[col] = label_encoder.fit_transform(modified_data[col])
+                    # Create a mapping dictionary for this column
+                    label_mappings[col] = {label: encoded_value for label, encoded_value in zip(original_data[col], modified_data[col])}
+        
+            # Store modified_data and label_mappings in session state
             st.session_state.modified_data = modified_data
-    
+            st.session_state.label_mappings = label_mappings
+
 
    # Splitting data into features (X) and labels (y)
     X = st.session_state.modified_data.drop(columns=[target_feature]) if st.session_state.modified_data is not None else original_data.drop(columns=[target_feature])
@@ -602,7 +634,7 @@ hyperparameters = {}
 if algorithm == "Random Forest":
         hyperparameters["n_estimators"] = st.number_input("Number of Estimators", min_value=1, value=100,key="a")
         hyperparameters["max_depth"] = st.number_input(" max_depth", min_value=1, value=100,key="b")
-        hyperparameters["min_samples_split"] = st.number_input("min_samples_split", min_value=1, value=100,key="c")
+        hyperparameters["min_samples_split"] = st.number_input("min_samples_split", min_value=2, value=100,key="c")
         hyperparameters["min_samples_leaf"] = st.number_input("min_samples_leaf", min_value=1, value=100,key="d")
         hyperparameters["random_state"] = st.number_input("Random State", min_value=0, value=7)
 elif algorithm == "Logistic Regression":
@@ -617,7 +649,7 @@ elif algorithm == "K-Nearest Neighbors":
         hyperparameters["n_neighbors"] = st.number_input("Number of Neighbors", min_value=1, value=5)
 elif algorithm == "Gradient Boosting":
         hyperparameters["n_estimators"] = st.number_input("Number of Estimators", min_value=1, value=100)
-        hyperparameters["min_samples_split"] = st.number_input("min_samples_split", min_value=1, value=100)
+        hyperparameters["min_samples_split"] = st.number_input("min_samples_split", min_value=2, value=100)
         hyperparameters["min_samples_leaf"] = st.number_input("min_samples_leaf", min_value=1, value=100)
         hyperparameters["random_state"] = st.number_input("Random State", min_value=0, value=42)
 elif algorithm == "AdaBoost":
@@ -727,7 +759,7 @@ if st.checkbox("Find Best Parameters", key="best"):
         algorithm = st.selectbox("Select Algorithm", list(classification_algorithms.keys()), key="choose_algo")
         if algorithm == "Random Forest":
             custom_hyperparameters = {
-                "n_estimators": st.multiselect("Random Forest - Number of Estimators", [1, 10, 100]),
+                "n_estimators": st.multiselect("Random Forest - Number of Estimators", [100, 200, 300]),
                 "max_depth": st.multiselect("Random Forest - Max Depth", [None, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30]),
                 "min_samples_split": st.multiselect("Random Forest - Min Samples Split", [2, 3, 4, 5, 6, 7, 8, 9, 10]),
                 "min_samples_leaf": st.multiselect("Random Forest - Min Samples Leaf", [1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -805,7 +837,7 @@ if st.checkbox("Find Best Parameters", key="best"):
         algorithm = st.selectbox("Select Algorithm", list(regression_algorithms.keys()), key="choose_reg_algo")
         if algorithm == "Random Forest Regression":
             custom_hyperparameters = {
-            "n_estimators": st.multiselect("Random Forest - Number of Estimators", [1, 10, 100]),
+            "n_estimators": st.multiselect("Random Forest - Number of Estimators", [100, 200, 300]),
             "max_depth": st.multiselect("Random Forest - Max Depth", [None, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30]),
             "min_samples_split": st.multiselect("Random Forest - Min Samples Split", [2, 3, 4, 5, 6, 7, 8, 9, 10]),
             "min_samples_leaf": st.multiselect("Random Forest - Min Samples Leaf", [1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -939,54 +971,111 @@ if st.button("Perform Cross-Validation"):
         st.write(f"Mean R2 Score: {cv_mean_score:.2f}")
         st.write(f"Standard Deviation: {cv_std_score:.2f}")
         st.write(f"R2 Scores: {cv_scores}")
+
+
+
 #: Test the Model
 st.markdown("---")
 st.subheader("Step 5 : Test Model")
-# Define problem statement
-problem_statement = st.selectbox("Select Problem Statement", ["Classification", "Regression"])
-if problem_statement == "Classification":
-    # Classification Testing
-    test_method = st.radio("Select Testing Method", ["Upload Test Dataset", "Manual Input"], key="test_method")
-    if test_method == "Upload Test Dataset":
-        uploaded_test_file = st.file_uploader("Upload a CSV file for testing", type=["csv"])
-        if uploaded_test_file is not None:
-            # Read the uploaded test data into a DataFrame with optional delimiter and encoding
-            test_data = pd.read_csv(uploaded_test_file)
-            # Display the uploaded test dataset
-            st.write("Uploaded test dataset:")
-            st.write(test_data)
-            # Perform predictions using the trained classification model
-            if 'best_classifier' in st.session_state and 'best_hyperparameters' in st.session_state:
+label_mappings = st.session_state.get("label_mappings", None)
+if label_mappings is not None:
+    st.header("Label Mappings")
+    for col, mapping in label_mappings.items():
+        st.subheader(f"Mapping for Column: {col}")
+        st.write(mapping)
+
+test_method = st.radio("Select Testing Method", ["Upload Test Dataset", "Manual Input"], key="test_method")
+if test_method == "Upload Test Dataset":
+    uploaded_test_file = st.file_uploader("Upload a CSV file for testing", type=["csv"])
+    if uploaded_test_file is not None:
+        # Read the uploaded test data into a DataFrame with optional delimiter and encoding
+        Test_data = pd.read_csv(uploaded_test_file)
+        test_data=Test_data.copy()
+        # Display the uploaded test dataset
+        st.write("Uploaded test dataset:")
+        st.write(test_data)
+
+        if target_feature in test_data.columns:
+        # Drop the target feature from the dataset
+            test_data = test_data.drop(columns=[target_feature])
+            st.write("Target feature is droped")    
+        # Option to apply column drop
+        if st.checkbox("Apply Column Drop",key="cd"):
+            columns_to_drop = st.multiselect("Select Columns to Drop", test_data.columns)
+            test_data = test_data.drop(columns=columns_to_drop)
+        # Option to apply label encoding
+        if st.checkbox("Apply Label Encoding",key="le"):
+            label_encoders = {}
+            for col in test_data.columns:
+                if test_data[col].dtype == 'object':
+                    label_encoders[col] = LabelEncoder()
+                    test_data[col] = label_encoders[col].fit_transform(test_data[col])
+    
+    
+        #if apply_feature_scaling:
+        scaling_method = st.selectbox("Select Feature Scaling Method", ["None", "StandardScaler", "Min-Max Scaling"])
+        if scaling_method != "None":
+            if scaling_method == "StandardScaler":
+                scaler = StandardScaler()
+            elif scaling_method == "Min-Max Scaling":
+                scaler = MinMaxScaler()
+            test_data = scaler.fit_transform(test_data)
+        if st.button("Confirm Changes",key="utd"):
+            #   You can store the modified test data for further use
+            st.session_state.modified_test_data = test_data
+    
+            # Perform predictions using the trained classification or regression model
+            if problem_statement == "Classification" and 'best_classifier' in st.session_state and 'best_hyperparameters' in st.session_state  and 'modified_test_data' in st.session_state:
                 best_classifier = st.session_state.best_classifier
                 classifier_params = st.session_state.best_hyperparameters
+                test_data = st.session_state.modified_test_data
                 best_classifier.set_params(**classifier_params)
-                # Preprocess the uploaded test data (scaling if necessary)
-                if scaling_method == "StandardScaler":
-                    test_data_scaled = scaler.transform(test_data)
-                elif scaling_method == "Min-Max Scaling":
-                    test_data_scaled = scaler.transform(test_data)
-                else:
-                    test_data_scaled = test_data
-                # Make predictions using the trained classification model
-                test_predictions = best_classifier.predict(test_data_scaled)
-                # Display the test predictions
+                test_predictions = best_classifier.predict(test_data)
                 st.subheader("Test Predictions")
                 st.write("Predicted Labels:")
                 st.write(test_predictions)
-    else:
-        # Manual Input for Classification Testing
+            elif problem_statement == "Regression" and 'best_classifier' in st.session_state and 'best_hyperparameters' in st.session_state  and 'modified_test_data' in st.session_state:
+                best_regressor = st.session_state.best_regressor
+                regressor_params = st.session_state.best_hyperparameters
+                test_data = st.session_state.modified_test_data            
+                best_regressor.set_params(**regressor_params)
+                test_predictions = best_regressor.predict(test_data)
+                st.subheader("Test Predictions")
+                st.write("Predicted Values:")
+                st.write(test_predictions)
+    
+            # Check if the target feature is available in the test dataset
+            if target_feature in Test_data.columns:
+                # Compare the target feature with the predicted values
+                st.subheader("Comparison with Target Feature")
+                target_values = Test_data[target_feature].values
+                comparison_data = {
+                    "Target Feature": target_values,
+                    "Predicted Labels": test_predictions,
+                }
+                # Create a table for the comparison
+                st.table(pd.DataFrame(comparison_data))
+
+elif test_method == "Manual Input":
+    if problem_statement == "Classification":
+
+            # Manual Input for Classification Testing
         st.subheader("Manual Input for Testing")
         st.write("Enter the data for testing manually:")
+
         # Create a DataFrame for manual input
         manual_input_df = pd.DataFrame(columns=X.columns)
+
         for feature in X.columns:
             manual_input = st.number_input(f"{feature}:", key=f"input_{feature}")
             manual_input_df[feature] = [manual_input]
+
         # Perform predictions using the trained classification model
         if 'best_classifier' in st.session_state and 'best_hyperparameters' in st.session_state:
             best_classifier = st.session_state.best_classifier
             classifier_params = st.session_state.best_hyperparameters
             best_classifier.set_params(**classifier_params)
+
             # Preprocess the manually input data (scaling if necessary)
             if scaling_method == "StandardScaler":
                 manual_input_scaled = scaler.transform(manual_input_df)
@@ -994,55 +1083,32 @@ if problem_statement == "Classification":
                 manual_input_scaled = scaler.transform(manual_input_df)
             else:
                 manual_input_scaled = manual_input_df
+
             # Make predictions using the trained classification model
             manual_test_predictions = best_classifier.predict(manual_input_scaled)
+
             # Display the manual test predictions
             st.subheader("Manual Test Predictions")
             st.write("Predicted Label:")
             st.write(manual_test_predictions)
-else:
-    # Regression Testing
-    test_method = st.radio("Select Testing Method", ["Upload Test Dataset", "Manual Input"], key="test_method")
-    if test_method == "Upload Test Dataset":
-        uploaded_test_file = st.file_uploader("Upload a CSV file for testing", type=["csv"])
-        if uploaded_test_file is not None:
-            # Read the uploaded test data into a DataFrame with optional delimiter and encoding
-            test_data = pd.read_csv(uploaded_test_file)
-            # Display the uploaded test dataset
-            st.write("Uploaded test dataset:")
-            st.write(test_data)
-            # Perform predictions using the trained regression model
-            if 'best_regressor' in st.session_state and 'best_reg_hyperparameters' in st.session_state:
-                best_regressor = st.session_state.best_regressor
-                regressor_params = st.session_state.best_hyperparameters
-                best_regressor.set_params(**regressor_params)
-                # Preprocess the uploaded test data (scaling if necessary)
-                if scaling_method == "StandardScaler":
-                    test_data_scaled = scaler.transform(test_data)
-                elif scaling_method == "Min-Max Scaling":
-                    test_data_scaled = scaler.transform(test_data)
-                else:
-                    test_data_scaled = test_data
-                # Make predictions using the trained regression model
-                test_predictions = best_regressor.predict(test_data_scaled)
-                # Display the test predictions
-                st.subheader("Test Predictions")
-                st.write("Predicted Values:")
-                st.write(test_predictions)
-    else:
+    elif problem_statement == "Regression":
         # Manual Input for Regression Testing
         st.subheader("Manual Input for Testing")
         st.write("Enter the data for testing manually:")
+
         # Create a DataFrame for manual input
         manual_input_df = pd.DataFrame(columns=X.columns)
+
         for feature in X.columns:
             manual_input = st.number_input(f"{feature}:", key=f"input_{feature}")
             manual_input_df[feature] = [manual_input]
+
         # Perform predictions using the trained regression model
         if 'best_regressor' in st.session_state and 'best_reg_hyperparameters' in st.session_state:
             best_regressor = st.session_state.best_regressor
             regressor_params = st.session_state.best_hyperparameters
             best_regressor.set_params(**regressor_params)
+
             # Preprocess the manually input data (scaling if necessary)
             if scaling_method == "StandardScaler":
                 manual_input_scaled = scaler.transform(manual_input_df)
@@ -1050,12 +1116,15 @@ else:
                 manual_input_scaled = scaler.transform(manual_input_df)
             else:
                 manual_input_scaled = manual_input_df
+
             # Make predictions using the trained regression model
             manual_test_predictions = best_regressor.predict(manual_input_scaled)
+
             # Display the manual test predictions
             st.subheader("Manual Test Predictions")
             st.write("Predicted Value:")
             st.write(manual_test_predictions)
+
 
 
 
@@ -1089,7 +1158,7 @@ st.markdown("- Preprocess Data: You can perform common data preprocessing tasks,
 st.markdown("- Try Machine Learning: You can see how machines can make predictions.")
 
 # Q4
-st.markdown("<h3>) Who is this project designed for?</h3>", unsafe_allow_html=True)
+st.markdown("<h3> Who is this project designed for?</h3>", unsafe_allow_html=True)
 st.markdown("This project is for:")
 st.markdown("- New Learners: If you're new to data and coding, it's perfect for you.")
 st.markdown("- Easy Access: You can use it on your computer or your phone.")
