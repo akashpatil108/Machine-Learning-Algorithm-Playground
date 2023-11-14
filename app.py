@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import io
 import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -23,6 +25,10 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, A
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import time
 from sklearn.preprocessing import LabelEncoder
+import sweetviz as sv
+st.set_option('deprecation.showPyplotGlobalUse', False)
+
+
 
 
 
@@ -329,23 +335,37 @@ st.markdown('''[LinkedIn](https://www.linkedin.com/in/akash-patil-985a7a179/)
 
 st.markdown("<div class='title'>Machine Learning Algorithm Playground</div>",unsafe_allow_html=True)
 
-st.markdown("---")
+
+# Function to perform automated EDA using sweetviz
+def perform_eda(data, target_feature):
+    report = sv.analyze([data, "Original Data"], target_feature)
+    return report
+
+#This will create a horizontal rule
+st.markdown("""<hr style="height:10px;border:none;color:#f84747d7;background-color:#f84747d7;" />""", unsafe_allow_html=True)
 
 # Introduction section
 st.markdown("This interactive web application is designed to help you explore and experiment with various machine learning algorithms for classification and regression tasks.")
 
 st.subheader("Get Started")
 st.markdown("Ready to get started? Follow these simple steps to explore the world of machine learning with our playground:")
-st.markdown("1. Upload your dataset in CSV format.")
-st.markdown("2. Select the problem statement (classification or regression).")
-st.markdown("3. Choose the machine learning algorithms you want to experiment with.")
-st.markdown("4. Fine-tune hyperparameters and view cross-validation scores.")
-st.markdown("5. Test your models and see how they perform on new data.")
-st.markdown("6. Visualize the results and gain insights into your data.")
+st.markdown("1. **Upload Dataset:** Click on 'Upload Dataset' to upload your dataset in CSV format.")
+st.markdown("2. **Explore Dataset:** Use the checkboxes to explore dataset characteristics like info, descriptive statistics, data distributions, correlation matrix, and pairplot.")
+st.markdown("3. **Preprocess Data:** drop columns, and perform label encoding if needed.")
+st.markdown("4. **Choose Algorithm:** Select a machine learning algorithm and customize hyperparameters.")
+st.markdown("5. **Find Best Parameters:** Click 'Find Best Parameters' to perform hyperparameter tuning using GridSearchCV.")
+st.markdown("6. **Evaluate Model:** Check accuracy metrics and classification report for classification or metrics like RMSE and R-squared for regression.")
+st.markdown("7. **Test Model:** Upload a test dataset or manually input data for testing.")
+st.markdown("8. **About this Project:** Learn more about the project and its purpose.")
+st.markdown("9. **Get Help:** Reach out to the developer through LinkedIn or GitHub for assistance.")
+st.markdown("10. **Enjoy Learning!:** Explore the world of data science without the hassle of complex coding.")
 st.info("Note: You can upload your own data in a CSV file by selecting 'Upload your own dataset'.")
 
 
-st.markdown("---")
+
+
+#This will create a horizontal rule
+st.markdown("""<hr style="height:10px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
 st.header("Step 1: Load Data")
 st.markdown(
     "Upload your preprocessed training dataset "
@@ -379,7 +399,7 @@ dataset_options = {name: sns.load_dataset(name) for name in dataset_names}
 
 
 # Add a selectbox to choose a dataset
-selected_dataset = st.selectbox("Select a Dataset", ["Select a Dataset", "Upload your own dataset"] + dataset_names)
+selected_dataset = st.selectbox("Select a Dataset", ["Select a Dataset", "Upload your own dataset 📂"] + dataset_names)
 
 # Initialize variables for uploaded data
 uploaded_file = None
@@ -397,7 +417,7 @@ columns_dropped = False
 label_encoding_applied = False
 
 # Upload dataset
-if selected_dataset == "Upload your own dataset":
+if selected_dataset == "Upload your own dataset 📂":
     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
     
     # Check if a file is uploaded
@@ -411,13 +431,76 @@ if selected_dataset == "Upload your own dataset":
         
         original_data  = pd.read_csv(uploaded_file, **read_options)
         
-        # Display the dataset
-        st.write("Uploaded dataset:")
-        st.write(original_data )
+        st.write("Dataset:",original_data.head())
+        
+        st.subheader("Dataset Exploration Options:")
+         # Display the dataset exploration options in a single row
+        show_dataset_info, show_descriptive_statistics, show_data_distributions, show_correlation_matrix, show_pairplot = st.columns(5)
+        
+        with show_dataset_info:
+            show_dataset_info=st.checkbox("Dataset info")
+        with show_descriptive_statistics:
+            show_descriptive_statistics=st.checkbox("Descriptive Statistics")
+        with show_data_distributions:
+            show_data_distributions= st.checkbox("Data Distributions") 
+        with show_correlation_matrix:
+            show_correlation_matrix= st.checkbox("Correlation Matrix")
+        with show_pairplot:
+            show_pairplot= st.checkbox("Pairplot (for smaller datasets)")
+
+
+        # Display the selected exploration results
+        
+        # Create two columns
+        SDO, SDS = st.columns(2)
+        # Check if the user wants to specify delimiter
+        with SDO:
+            if show_dataset_info:
+                st.subheader("Dataset info:")
+                st.write((original_data.info()))
+        with SDS:
+            if show_descriptive_statistics:
+                st.subheader("Descriptive Statistics:")
+                st.write(original_data.describe())
+
+        if show_data_distributions:
+            st.subheader("Data Distributions:")
+            for column in original_data.select_dtypes(include=[np.number]).columns:
+                st.write(f"**{column}**")
+                fig, ax =plt.subplots(figsize(8,6))
+                plt.hist(original_data[column], bins='auto', edgecolor='black', alpha=0.7)
+                st.pyplot()
+
+            for column in original_data.select_dtypes(include=['object','category']).columns:
+                st.write(f"**{column}**")
+                fig, ax = plt.subplots(figsize=(8, 6))
+                st.bar_chart(original_data[column])
+                st.pyplot()
+
+        if show_correlation_matrix:
+            st.subheader("Correlation Matrix:")
+            corr_matrix = original_data.corr()
+            fig, ax = plt.subplots(figsize=(8, 6))
+            sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", square=True)
+            st.pyplot()
+
+        if show_pairplot and len(original_data) < 1000:  # Limit pairplot for smaller datasets
+            st.subheader("Pairplot:")
+            pairplot = sns.pairplot(original_data)
+            st.pyplot(pairplot)
+
         if original_data is not None:
-            st.subheader("Data Summary")
             st.write("Null Value Check:")
-            st.write(original_data.isnull().sum())
+            null_values = original_data.isnull().sum()
+            st.write(null_values)
+        
+        if null_values.any():
+            st.warning("This dataset contains null values. Please consider handling null values before continuing with the analysis.")
+            # Optionally, you can also display the columns with null values:
+            st.write("Columns with Null Values:")
+            st.write(null_values[null_values > 0].index.tolist())
+        else:
+            st.success("This dataset is free of null values. You can proceed with the analysis.")
         
         target_feature = st.selectbox("Select Target Feature", original_data .columns, key="target_feature")
 
@@ -472,12 +555,85 @@ elif selected_dataset != "Select a Dataset":
 
     # Display the selected pre-loaded dataset
     st.write(f"Selected Pre-loaded Dataset: {selected_dataset_name}")
-    st.write("Preview of the selected pre-loaded dataset:")
-    st.write(original_data )
+    st.write("Dataset:",original_data.head())
+    st.subheader("Dataset Exploration Options:")
+    # Display the dataset exploration options in a single row
+    show_dataset_info, show_descriptive_statistics, show_data_distributions, show_correlation_matrix, show_pairplot = st.columns(5)
+
+    with show_dataset_info:
+        show_dataset_info=st.checkbox("Dataset info")
+    with show_descriptive_statistics:
+        show_descriptive_statistics=st.checkbox("Descriptive Statistics")
+    with show_data_distributions:
+        show_data_distributions= st.checkbox("Data Distributions") 
+    with show_correlation_matrix:
+        show_correlation_matrix= st.checkbox("Correlation Matrix")
+    with show_pairplot:
+        show_pairplot= st.checkbox("Pairplot (for smaller datasets)")
+
+    # Create two columns
+    SDO, SDS = st.columns(2)
+    # Check if the user wants to specify delimiter
+    with SDO:
+        if show_dataset_info:
+            # Capture the output of DataFrame.info() in a buffer
+            buffer = io.StringIO()
+            original_data.info(buf=buffer)
+
+            # Get the buffer content
+            info_output = buffer.getvalue()
+            st.subheader("Dataset info:")
+            st.text(info_output)
+    with SDS:
+        if show_descriptive_statistics:
+            st.subheader("Descriptive Statistics:")
+            st.write(original_data.describe())
+    
+    with st.expander("Data Distributions", expanded=True):  # Set expanded to False by default
+    
+        if show_data_distributions:
+            st.subheader("Data Distributions:")
+            for column in original_data.select_dtypes(include=[np.number]).columns:
+                st.write(f"**{column}**")
+                # Create a figure with a specific size
+                fig, ax = plt.subplots(figsize=(8, 6))
+                plt.hist(original_data[column], bins='auto', edgecolor='black', alpha=0.7)
+                st.pyplot()
+            for column in original_data.select_dtypes(include=['object','category']).columns:
+                st.write(f"**{column}**")
+                # Create a figure with a specific size
+                fig, ax = plt.subplots(figsize=(8, 6))
+                st.bar_chart(original_data[column])
+                st.pyplot()
+
+    with st.expander("Correlation matrix",expanded=True):
+
+        if show_correlation_matrix:
+            st.subheader("Correlation Matrix:")
+            corr_matrix = original_data.corr()
+            sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", square=True)
+            st.pyplot()
+
+
+    with st.expander("pairplot",expanded=True):
+        if show_pairplot and len(original_data) < 1000:  # Limit pairplot for smaller datasets
+            st.subheader("Pairplot:")
+            pairplot = sns.pairplot(original_data)
+            st.pyplot(pairplot)
+
     if original_data is not None:
-            st.subheader("Data Summary")
-            st.write("Null Value Check:")
-            st.write(original_data.isnull().sum())
+        st.write("Null Value Check:")
+        null_values = original_data.isnull().sum()
+        st.write(null_values)
+
+    if null_values.any():
+        st.warning("This dataset contains null values. Please consider handling null values before continuing with the analysis.")
+        # Optionally, you can also display the columns with null values:
+        st.write("Columns with Null Values:")
+        st.write(null_values[null_values > 0].index.tolist())
+    else:
+        st.success("This dataset is free of null values. You can proceed with the analysis.")
+
 
     target_feature = st.selectbox("Select Target Feature", original_data.columns, key="target_feature")
 
@@ -525,7 +681,32 @@ elif selected_dataset != "Select a Dataset":
     st.write("Labeled Features (X):")
     st.write(X)
 
-st.markdown("---")
+#This will create a horizontal rule
+st.markdown("""<hr style="height:2px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
+
+
+st.write("### Automated Exploratory Data Analysis (EDA) 📊 Report:")
+ # Display information about the Automated EDA
+st.write("EDA is performed using the Sweetviz library, which generates a comprehensive report to analyze the dataset.")
+# Display precautions and requirements
+st.write("#### Precautions and Requirements:")
+st.write("- Sweetviz expects the target feature to be either numerical or boolean.")
+st.write("- Ensure that the selected target feature is suitable for analysis.")
+# Display automated EDA report
+if st.button("Generate Automated EDA Report"):
+    if st.session_state.modified_data is not None:
+        eda_report = perform_eda(st.session_state.modified_data, target_feature)
+    elif original_data is not None:
+        eda_report = perform_eda(original_data, target_feature)
+    else:
+        st.warning("No data available for EDA. Please upload a dataset or select a pre-loaded dataset.")
+
+        # Display the EDA report
+        st.write("Automated EDA Report:")
+    st.write(eda_report.show_html())
+
+#This will create a horizontal rule
+st.markdown("""<hr style="height:10px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
 
 st.header("Step 2: Select the Algorithm")
 st.markdown(
@@ -577,7 +758,8 @@ if 'selected_algorithm' in st.session_state:
     selected_algorithm = st.session_state.selected_algorithm
     st.write(f"Selected algorithm class: {selected_algorithm}")
 #Train-Test Split
-st.markdown("---")
+#This will create a horizontal rule
+st.markdown("""<hr style="height:8px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
 st.subheader(" Train-Test Split")
 st.write("Specify the split size (percentage) and the random state for reproducibility.")
 split_size = st.slider("Select Split Size (%)", min_value=1, max_value=100, value=80)
@@ -625,11 +807,13 @@ else:
     st.session_state.X_test_scaled = X_test_scaled
 
 
-st.markdown("---")
+#This will create a horizontal rule
+st.markdown("""<hr style="height:8px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
+
 st.header("Step 3: Train and Optimize Models")
 st.markdown(
-    "Select the hyperparameters for training."
-    "then train the model.")
+   """ "Select the parameters for training."
+    "Then train the model." """)
 hyperparameters = {}
 if algorithm == "Random Forest":
         hyperparameters["n_estimators"] = st.number_input("Number of Estimators", min_value=1, value=100,key="a")
@@ -655,14 +839,15 @@ elif algorithm == "Gradient Boosting":
 elif algorithm == "AdaBoost":
         hyperparameters["n_estimators"] = st.number_input("Number of Estimators", min_value=1, value=50,key="tp")
         hyperparameters["random_state"] = st.number_input("Random State", min_value=0, value=42,key="ta")
-        hyperparameters["learning_rate"] = st.number_input("Random State", min_value=0.0, value=1.0,key="t")
+        hyperparameters["learning_rate"] = st.number_input("learning_rate", min_value=0.0, value=1.0,key="t")
 elif algorithm == "Gaussian Naive Bayes":
         hyperparameters["var_smoothing"] = st.number_input("Variance Smoothing", min_value=1e-10, value=1e-9)
 elif algorithm == "Decision Tree":
-        hyperparameters["min_samples_split"] = st.number_input("Min Samples Split", min_value=2, value=2,key="ae"),
-        hyperparameters["min_samples_leaf"] = st.number_input("Min Samples Leaf", min_value=1, value=1,key="at"),
-        hyperparameters["criterion"] = st.selectbox("criterion", ["gini", "entropy","log_loss" ])
-        hyperparameters["random_state"] =st.number_input("Random State", min_value=0, value=42,key="ai")
+        hyperparameters["min_samples_split"] = st.number_input("Min Samples Split", min_value=2, value=2, key="ae")
+        hyperparameters["min_samples_leaf"] = st.number_input("Min Samples Leaf", min_value=1, value=1, key="at")
+        hyperparameters["criterion"] = st.selectbox("Criterion", ["gini", "entropy", "log_loss"])
+        hyperparameters["random_state"] = st.number_input("Random State", min_value=0, value=42, key="ai")
+
 elif algorithm == "Ridge Regression":
         hyperparameters["alpha"] = st.number_input("Alpha (Regularization Strength)", min_value=0.001, value=1.0)
         hyperparameters["solver"] = st.selectbox("Solver", ["auto", "svd", "cholesky", "lsqr", "sparse_cg", "sag", "saga"])
@@ -682,7 +867,7 @@ elif algorithm == "Decision Tree Regression":
         hyperparameters["max_depth"] = st.number_input("Max Depth", min_value=1, value=1)
         hyperparameters["min_samples_split"] = st.number_input("Min Samples Split", min_value=2, value=2)
         hyperparameters["min_samples_leaf"] = st.number_input("Min Samples Leaf", min_value=1, value=1)
-        hyperparameters["criterion"] = st.selectbox("Criterion", ["mse", "friedman_mse", "mae"])
+        hyperparameters["criterion"] = st.selectbox("Criterion", ["absolute_error", "friedman_mse", "squared_error","poisson"])
         hyperparameters["random_state"] = st.number_input("Random State", min_value=0, value=42)
 elif algorithm == "Random Forest Regression":
         hyperparameters["n_estimators"] = st.number_input("Number of Estimators", min_value=1, value=100)
@@ -750,7 +935,9 @@ elif problem_statement == "Regression":
             st.write("R2 Score:", result['R2 Score'])
 custom_hyperparameters = ()
 
-st.markdown("---")
+#This will create a horizontal rule
+st.markdown("""<hr style="height:8px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
+
 # Check if the "Find Best Parameters" checkbox is selected
 st.subheader(f"Step 4: Find Best Parameters and Cross validation score for {algorithm}")
 if st.checkbox("Find Best Parameters", key="best"):
@@ -791,12 +978,19 @@ if st.checkbox("Find Best Parameters", key="best"):
         elif algorithm == "AdaBoost":
             custom_hyperparameters = {
                 "n_estimators": st.multiselect("AdaBoost - Number of Estimators", [50, 100, 200, 300, 400, 500]),
-                "learning_rate": st.multiselect("AdaBoost -learning_rate", [0.0,0.2,0.4,0.6,0.8,1.0,1.5,2.0,2.5,3.0,4.0,5.0,6.0,7.0,8.0]),
+                "learning_rate": st.multiselect("AdaBoost -learning_rate", [0.1,0.2,0.4,0.6,0.8,1.0,1.5,2.0,2.5,3.0,4.0,5.0,6.0,7.0,8.0]),
                 "random_state": [42]
             }
         elif algorithm == "Gaussian Naive Bayes":
+            # Define the range for var_smoothing
+            var_smoothing_range = [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+
+            # Allow the user to select multiple values
+            selected_values = st.multiselect("Variance Smoothing", var_smoothing_range, default=[1e-9])
+
+            # Use the selected values in your hyperparameters
             custom_hyperparameters = {
-                "var_smoothing": st.multiselect("Variance Smoothing", min_value=1e-10, max_value=1e-1, step=1e-10, value=1e-9)
+                "var_smoothing": selected_values
             }
         elif algorithm == "Decision Tree":
             custom_hyperparameters = {
@@ -804,7 +998,7 @@ if st.checkbox("Find Best Parameters", key="best"):
                 "min_samples_split": st.multiselect("Min Samples Split", [2, 3, 4, 5, 6, 7, 8, 9, 10]),
                 "min_samples_leaf": st.multiselect("Min Samples Leaf", [1, 2, 3, 4, 5, 6, 7, 8, 9]),
                 "criterion": st.multiselect("Support Vector Machine - criterion", ["gini", "entropy", "log_loss"]),
-                "random_state": st.number_input("Random State", min_value=0, value=42)
+                "random_state": [42]
             }
             # Check if the "Find Best Algorithm" button is clicked
         if st.button("Find Best Parameters"):
@@ -849,11 +1043,25 @@ if st.checkbox("Find Best Parameters", key="best"):
             "max_iter": st.multiselect("Logistic Regression - Maximum Iterations", [100, 200, 300]),
             "random_state": [42]
             }
+        elif algorithm == "Ridge Regression":
+            custom_hyperparameters = {
+                "alpha": st.multiselect("Ridge Regression - Regularization Strength (alpha)", [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]),
+                "solver": st.multiselect("Ridge Regression - Solver", ["auto", "svd", "cholesky", "lsqr", "sparse_cg", "sag", "saga"]),
+                "random_state": [42]
+            }
+
+        elif algorithm == "Lasso Regression":
+                custom_hyperparameters = {
+                "alpha": st.multiselect("Lasso Regression - Regularization Strength (alpha)", [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]),
+                "random_state": [42]
+            }
         elif algorithm == "Support Vector Regression":
             custom_hyperparameters = {
             "C": st.multiselect("Support Vector Regression - Regularization Parameter (C)", [0.001, 0.01, 0.1, 1.0]),
             "kernel": st.multiselect("Support Vector Regression - Kernel", ["linear", "rbf", "poly", "sigmoid"]),
-            "random_state": [42]
+            "degree": st.multiselect("Support Vector Regression - Degree of Polynomial Kernel", [1,2, 3, 4, 5, 6, 7, 8, 9, 10]),
+            "gamma": st.multiselect("Support Vector Regression - Gamma", ["scale", "auto"] + [1e-3, 1e-4, 1e-5]),
+            
             }
         elif algorithm == "K-Nearest Neighbors Regression":
             custom_hyperparameters = {
@@ -865,12 +1073,16 @@ if st.checkbox("Find Best Parameters", key="best"):
             "n_estimators": st.multiselect("Gradient Boosting Regression - Number of Estimators", [50, 100, 200, 300, 400, 500]),
             "min_samples_split": st.multiselect("Gradient Boosting Regression - Min Samples Split", [2, 3, 4, 5, 6, 7, 8, 9, 10]),
             "min_samples_leaf": st.multiselect("Gradient Boosting Regression - Min Samples Leaf", [1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            "learning_rate": st.multiselect("Gradient Boosting Regression - Learning Rate", [0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+            "max_depth": st.multiselect("Gradient Boosting Regression - Max Depth", [3, 4, 5, 6, 7, 8, 9, 10]),
             "random_state": [42]
+
             }
         elif algorithm == "AdaBoost Regression":
             custom_hyperparameters = {
             "n_estimators": st.multiselect("AdaBoost Regression - Number of Estimators", [50, 100, 200, 300, 400, 500]),
-            "learning_rate": st.multiselect("AdaBoost Regression - Learning Rate", [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+            "learning_rate": st.multiselect("AdaBoost Regression - Learning Rate", [0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+            "loss": st.multiselect("AdaBoost Regression - Loss Function", ["linear", "square", "exponential"]),
             "random_state": [42]
             }
         elif algorithm == "Decision Tree Regression":
@@ -878,7 +1090,7 @@ if st.checkbox("Find Best Parameters", key="best"):
             "max_depth": st.multiselect("Decision Tree Regression - Max Depth", [None, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30]),
             "min_samples_split": st.multiselect("Decision Tree Regression - Min Samples Split", [2, 3, 4, 5, 6, 7, 8, 9, 10]),
             "min_samples_leaf": st.multiselect("Decision Tree Regression - Min Samples Leaf", [1, 2, 3, 4, 5, 6, 7, 8, 9]),
-            "criterion": st.multiselect("Decision Tree Regression - Criterion", ["mse", "friedman_mse", "mae"]),
+            "criterion": st.multiselect("Decision Tree Regression - Criterion", ["absolute_error", "friedman_mse", "squared_error","poisson"]),
             "random_state": [42]
             }
             # Check if the "Find Best Algorithm" button is clicked
@@ -972,10 +1184,10 @@ if st.button("Perform Cross-Validation"):
         st.write(f"Standard Deviation: {cv_std_score:.2f}")
         st.write(f"R2 Scores: {cv_scores}")
 
-
+#This will create a horizontal rule
+st.markdown("""<hr style="height:10px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
 
 #: Test the Model
-st.markdown("---")
 st.subheader("Step 5 : Test Model")
 label_mappings = st.session_state.get("label_mappings", None)
 if label_mappings is not None:
@@ -1126,56 +1338,57 @@ elif test_method == "Manual Input":
             st.write(manual_test_predictions)
 
 
+#This will create a horizontal rule
+st.markdown("""<hr style="height:10px;border:none;color:#333;background-color:#f84747d7;" />""", unsafe_allow_html=True)
 
 
-
-
-import streamlit as st
-
-import streamlit as st
-
+# About this Project Section
 st.subheader("About this Project")
 
 # Project Purpose
-st.markdown("Project Purpose:")
-st.markdown("This project is like a friendly guide for beginners who want to learn how to use algorithms for data analysis. It helps them understand the step-by-step process of working with data without needing to write complex code. It's like having a virtual assistant that makes learning data science easy and accessible, even if you're using a mobile phone.")
-
-
+st.markdown("### Project Purpose:")
+st.markdown("This project is designed as a friendly guide for beginners eager to explore the realms of data science and machine learning without delving into complex coding. Acting as a virtual assistant, it simplifies the step-by-step process, making data science accessible to all, whether on a computer or a mobile phone.")
 
 # Q1
-st.markdown("<h3> What is this project all about?</h3>", unsafe_allow_html=True)
-st.markdown("This project is like a friendly tutor for people who are curious about data science and machine learning. It helps you learn without needing to write complex code. You can use it on your computer or even on your phone.")
+st.markdown("### Q1: What is this project all about?")
+st.markdown("This project serves as a friendly tutor for those curious about data science and machine learning. It facilitates learning without the need for intricate coding, providing a seamless experience on both computers and phones.")
 
 # Q2
-st.markdown("<h3>) How can this project help me?</h3>", unsafe_allow_html=True)
-st.markdown("This project is super useful if you're just starting to explore data science and machine learning. It makes it easy to look at data, make it ready for analysis (like removing stuff you don't need), and try out machine learning—no coding skills required.")
+st.markdown("### Q2: How can this project help me?")
+st.markdown("This project is a valuable resource for beginners entering the data science and machine learning domain. It streamlines tasks like exploring data, preparing it for analysis, and experimenting with machine learning—no coding skills required.")
 
 # Q3
-st.markdown("<h3> What can I do with this project?</h3>", unsafe_allow_html=True)
+st.markdown("### Q3: What can I do with this project?")
 st.markdown("With this project, you can:")
-st.markdown("- Look at Data: You can easily see what data looks like.")
-st.markdown("- Preprocess Data: You can perform common data preprocessing tasks, such as dropping columns and label encoding.")
-st.markdown("- Try Machine Learning: You can see how machines can make predictions.")
+st.markdown("- **Explore Data:** Easily visualize and understand your data.")
+st.markdown("- **Preprocess Data:** Perform common preprocessing tasks like dropping columns and label encoding.")
+st.markdown("- **Try Machine Learning:** Witness how machines can make predictions.")
 
 # Q4
-st.markdown("<h3> Who is this project designed for?</h3>", unsafe_allow_html=True)
-st.markdown("This project is for:")
-st.markdown("- New Learners: If you're new to data and coding, it's perfect for you.")
-st.markdown("- Easy Access: You can use it on your computer or your phone.")
-st.markdown("- No Coding Needed: You don't need to be a coding expert.")
+st.markdown("### Q4: Who is this project designed for?")
+st.markdown("This project is ideal for:")
+st.markdown("- **New Learners:** Perfect for those new to data and coding.")
+st.markdown("- **Easy Access:** Usable on both computers and phones.")
+st.markdown("- **No Coding Needed:** No coding expertise required.")
 
 # Q5
-st.markdown("<h3> What are the limitations of this project?</h3>", unsafe_allow_html=True)
-st.markdown("While this project is super helpful for new learners and those who want to explore data science easily, it has some limitations:")
-st.markdown("- Simplicity: It simplifies complex data science tasks, which is great for beginners. However, it may not cover all advanced topics.")
-st.markdown("- Data Size: Handling very large datasets can be slow and might not work well on mobile devices.")
-st.markdown("- Not for Experts: If you're already an experienced data scientist, you might find it too basic for your needs.")
-st.markdown("Remember, it's a fantastic starting point, but you might need to explore more advanced tools as you become more experienced in data science.")
+st.markdown("### Q5: What are the limitations of this project?")
+st.markdown("While this project is excellent for beginners and those eager to explore data science, it has some limitations:")
+st.markdown("- **Simplicity:** It simplifies tasks, making it great for beginners but may not cover all advanced topics.")
+st.markdown("- **Data Size:** Handling very large datasets can be slow and might not work well on mobile devices.")
+st.markdown("- **Not for Experts:** If you're already an experienced data scientist, you might find it too basic for your needs.")
+st.markdown("Remember, it's a fantastic starting point, but as you gain experience, you might explore more advanced tools in data science.")
 
 
 
 st.markdown('''[LinkedIn](https://www.linkedin.com/in/akash-patil-985a7a179/)
 [GitHub](https://github.com/akashpatil108)
 ''')
+
+#This will create a horizontal rule
+st.markdown("""<hr style="height:1px;border:none;color:#333;background-color:#333;" />""", unsafe_allow_html=True)
+
+
+
 # Add a footer
 st.markdown('<div class="footer">© 2023 Akash Patil </div> ', unsafe_allow_html=True)
