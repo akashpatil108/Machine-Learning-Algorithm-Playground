@@ -268,7 +268,6 @@ st.markdown(
 
 
 
-
 if 'Report' not in st.session_state:
     st.session_state.Report = []
 
@@ -463,36 +462,43 @@ if selected_dataset == "Upload your own dataset 📂":
                 st.subheader("Descriptive Statistics:")
                 st.write(original_data.describe())
 
-        if show_data_distributions:
-            st.subheader("Data Distributions:")
-            for column in original_data.select_dtypes(include=[np.number]).columns:
-                st.write(f"**{column}**")
-                fig, ax =plt.subplots(figsize(8,6))
-                plt.hist(original_data[column], bins='auto', edgecolor='black', alpha=0.7)
-                st.pyplot()
+        with st.expander("Data Distributions", expanded=True):  # Set expanded to False by default
+    
+            if show_data_distributions:
+                st.subheader("Data Distributions:")
+                for column in original_data.select_dtypes(include=[np.number]).columns:
+                    st.write(f"**{column}**")
+                    # Create a figure with a specific size
+                    fig, ax = plt.subplots(figsize=(8, 6))
+                    plt.hist(original_data[column], bins='auto', edgecolor='black', alpha=0.7)
+                    st.pyplot()
+                for column in original_data.select_dtypes(exclude='number').columns:
+                    st.write(f"**{column}**")
+                    # Create a figure with a specific size
+                    fig, ax = plt.subplots(figsize=(8, 6))
+                    sns.countplot(x=column, data=original_data)
+                    st.pyplot()
 
-            for column in original_data.select_dtypes(include=['object','category']).columns:
-                st.write(f"**{column}**")
+        with st.expander("Correlation matrix",expanded=True):
+
+            if show_correlation_matrix:
+                st.subheader("Correlation Matrix:")
+                corr_matrix = original_data.corr()
+
+                # Use seaborn heatmap to create a correlation matrix plot
                 fig, ax = plt.subplots(figsize=(8, 6))
-                st.bar_chart(original_data[column])
-                st.pyplot()
+                sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", square=True)
 
-        if show_correlation_matrix:
-            st.subheader("Correlation Matrix:")
-            corr_matrix = original_data.corr()
-            fig, ax = plt.subplots(figsize=(8, 6))
-            sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", square=True)
-            st.pyplot()
+                # Display the plot using st.pyplot()
+                st.pyplot(fig)
 
-        if show_pairplot and len(original_data) < 1000:  # Limit pairplot for smaller datasets
-            st.subheader("Pairplot:")
-            pairplot = sns.pairplot(original_data)
-            st.pyplot(pairplot)
 
-        if original_data is not None:
-            st.write("Null Value Check:")
-            null_values = original_data.isnull().sum()
-            st.write(null_values)
+        with st.expander("pairplot",expanded=True):
+            if show_pairplot and len(original_data) < 1000:  # Limit pairplot for smaller datasets
+                st.subheader("Pairplot:")
+                pairplot = sns.pairplot(original_data)
+                st.pyplot(pairplot)
+
         
         if null_values.any():
             st.warning("This dataset contains null values. Please consider handling null values before continuing with the analysis.")
@@ -599,11 +605,11 @@ elif selected_dataset != "Select a Dataset":
                 fig, ax = plt.subplots(figsize=(8, 6))
                 plt.hist(original_data[column], bins='auto', edgecolor='black', alpha=0.7)
                 st.pyplot()
-            for column in original_data.select_dtypes(include=['object','category']).columns:
+            for column in original_data.select_dtypes(exclude='number').columns:
                 st.write(f"**{column}**")
                 # Create a figure with a specific size
                 fig, ax = plt.subplots(figsize=(8, 6))
-                st.bar_chart(original_data[column])
+                sns.countplot(x=column, data=original_data)
                 st.pyplot()
 
     with st.expander("Correlation matrix",expanded=True):
@@ -611,8 +617,13 @@ elif selected_dataset != "Select a Dataset":
         if show_correlation_matrix:
             st.subheader("Correlation Matrix:")
             corr_matrix = original_data.corr()
+
+            # Use seaborn heatmap to create a correlation matrix plot
+            fig, ax = plt.subplots(figsize=(8, 6))
             sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", square=True)
-            st.pyplot()
+
+            # Display the plot using st.pyplot()
+            st.pyplot(fig)
 
 
     with st.expander("pairplot",expanded=True):
