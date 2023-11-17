@@ -499,7 +499,10 @@ if selected_dataset == "Upload your own dataset 📂":
                 pairplot = sns.pairplot(original_data)
                 st.pyplot(pairplot)
 
-        
+        if original_data is not None:
+            st.write("Null Value Check:")
+            null_values = original_data.isnull().sum()
+            st.write(null_values)
         if null_values.any():
             st.warning("This dataset contains null values. Please consider handling null values before continuing with the analysis.")
             # Optionally, you can also display the columns with null values:
