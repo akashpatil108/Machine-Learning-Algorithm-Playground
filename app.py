@@ -455,8 +455,14 @@ if selected_dataset == "Upload your own dataset 📂":
         # Check if the user wants to specify delimiter
         with SDO:
             if show_dataset_info:
+                    # Capture the output of DataFrame.info() in a buffer
+                buffer = io.StringIO()
+                original_data.info(buf=buffer)
+    
+                # Get the buffer content
+                info_output = buffer.getvalue()
                 st.subheader("Dataset info:")
-                st.write((original_data.info()))
+                st.text(info_output)
         with SDS:
             if show_descriptive_statistics:
                 st.subheader("Descriptive Statistics:")
