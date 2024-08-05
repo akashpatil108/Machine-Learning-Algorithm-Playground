@@ -624,8 +624,9 @@ elif selected_dataset != "Select a Dataset":
     with st.expander("Correlation matrix",expanded=True):
 
         if show_correlation_matrix:
+            numerical_data=original_data.select_dtypes(include=[np.number])
             st.subheader("Correlation Matrix:")
-            corr_matrix = original_data.corr()
+            corr_matrix = numerical_data.corr()
 
             # Use seaborn heatmap to create a correlation matrix plot
             fig, ax = plt.subplots(figsize=(8, 6))
